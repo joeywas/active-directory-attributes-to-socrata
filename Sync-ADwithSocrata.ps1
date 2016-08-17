@@ -23,7 +23,6 @@ function Get-ADUsersForUpload {
                 * Exclude accounts that have extensionAttribute10 set (HideFromState attribute)
             Sets the ismanager property to "yes" if the AD account has the directReports property set, otherwise it is "no"
     #>
-
     $properties = @("GivenName","sn","DisplayName","EmailAddress","Office","Department","Company","Description","POBox","telephoneNumber","City","directReports")
     $json = Get-ADUser -filter {
         (Enabled -eq "True") -and (telephoneNumber -ne "$null") -and (EmailAddress -ne "$null") -and (extensionAttribute10 -notlike "*")
@@ -39,10 +38,12 @@ function Get-ADUsersForUpload {
         @{Name="city";Expression={$_.City}},
         @{Name="ismanager";Expression={if($_.directReports){"yes"} else {"no"}}},
         @{Name="lastupdatedate";Expression={Get-Date -Format g}} | ConvertTo-JSON
+    return $json
 }
 
-# This function populates the $json variable
-Get-ADUsersForUpload
+# Populate the $json variable
+$json = Get-ADUsersForUpload
+write-debug $json
 
 # Create auth information for HTTP Basic Auth
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $username,$password)))
@@ -57,4 +58,4 @@ $headers.Add("X-App-Token",$apptoken)
 
 $results = Invoke-RestMethod -Uri $dataseturi -Method Post -Headers $headers -Body $json -ContentType "application/json"
 
-write-host $results
+Write-Verbose $results
