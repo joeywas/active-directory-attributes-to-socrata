@@ -26,7 +26,7 @@ function Get-ADUsersForUpload {
     $properties = @("GivenName","sn","DisplayName","EmailAddress","Office","Department","Company","Description","POBox","telephoneNumber","City","directReports")
     $json = Get-ADUser -filter {
         (Enabled -eq "True") -and (telephoneNumber -ne "$null") -and (EmailAddress -ne "$null") -and (extensionAttribute10 -notlike "*")
-        } -Properties $properties | 
+        } -Properties $properties |
         select @{Name="firstname";Expression={$_.GivenName}},
         @{Name="lastname";Expression={$_.sn}},
         @{Name="emailaddress";Expression={$_.EmailAddress}},
@@ -56,6 +56,13 @@ $headers.Add("Authorization",("Basic {0}" -f $base64AuthInfo))
 $headers.Add("Content-Length",$json.Length)
 $headers.Add("X-App-Token",$apptoken)
 
-$results = Invoke-RestMethod -Uri $dataseturi -Method Post -Headers $headers -Body $json -ContentType "application/json"
+# Post = Update existing records based on dataset key
+# Put = Bulk replace entire dataset
+# Use Put until logic is built into this
+# script to handle deletes in an upsert
+# https://dev.socrata.com/publishers/getting-started.html
+$method = "Put"
+
+$results = Invoke-RestMethod -Uri $dataseturi -Method $method -Headers $headers -Body $json -ContentType "application/json"
 
 Write-Verbose $results
