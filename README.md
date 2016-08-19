@@ -9,5 +9,5 @@ Sync active directory user account attributes with the Socrata open data api (SO
     -password <password>
     -apptoken <apptoken>
     -socratahost <hostname>
-    *-Verbose*
+    [-Verbose]
 ```
