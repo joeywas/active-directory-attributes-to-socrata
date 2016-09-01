@@ -41,6 +41,23 @@ function Get-ADUsersForUpload {
     return $json
 }
 
+# Import AD module if it isn't already loaded.  Only import it if it is available
+if (Get-Module -ListAvailable -Name ActiveDirectory) {
+    # AD module is available, check to see if it is already loaded
+    if (-not (Get-Module -Name ActiveDirectory)) {
+       # Module is not loaded, import it
+       write-debug "Importing ActiveDirectory module"
+       Import-Module ActiveDirectory
+    } else {
+       write-debug "ActiveDirectory module already loaded"
+    }
+} else {
+    write-host "ActiveDirectory PowerShell module is not available"
+    write-debug "Loaded modules:"
+    write-debug (Get-Module)
+    exit 1
+}
+
 # Populate the $json variable
 $json = Get-ADUsersForUpload
 write-debug $json
@@ -65,4 +82,5 @@ $method = "Put"
 
 $results = Invoke-RestMethod -Uri $dataseturi -Method $method -Headers $headers -Body $json -ContentType "application/json"
 
+# The results contain how many records were created, updated, deleted, etc.
 Write-Verbose $results
